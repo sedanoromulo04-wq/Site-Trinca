@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protocolo Trinca — Rodrigo Siri Futevôlei</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET ─── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:16px;scroll-snap-type:y mandatory;overflow-y:scroll;scroll-behavior:smooth}
+body{background:#FFFFFF;color:#0A2E5C;font-family:'DM Sans',sans-serif;overflow-x:hidden;cursor:none}
+a{text-decoration:none;color:inherit}
+button{border:none;background:none;cursor:none;font:inherit}
+
+/* ─── VARIABLES ─── */
+:root{
+  --or:#E8530A;
+  --or2:#FF6B35;
+  --bg:#FFFFFF;
+  --bg1:#F7F9FC;
+  --bg2:#EEF2F7;
+  --line:rgba(10,46,92,.1);
+  --line-or:rgba(232,83,10,.22);
+  --text:#0A2E5C;
+  --muted:#3A5878;
+  --cream:#0A2E5C;
+  --blue:#0A2E5C;
+}
+
+/* ─── CURSOR ─── */
+#cur{position:fixed;z-index:9999;pointer-events:none;mix-blend-mode:multiply}
+#cur-dot{position:fixed;width:6px;height:6px;background:#0A2E5C;border-radius:50%;transform:translate(-50%,-50%);transition:width .2s,height .2s}
+#cur-ring{position:fixed;width:28px;height:28px;border:1px solid rgba(232,83,10,.5);border-radius:50%;transform:translate(-50%,-50%);transition:all .25s ease}
+body:has(a:hover) #cur-ring,
+body:has(button:hover) #cur-ring,
+body:has(.tilt-card:hover) #cur-ring{width:44px;height:44px;border-color:var(--or)}
+
+/* ─── SCROLL PROGRESS ─── */
+#progress{position:fixed;top:0;left:0;height:2px;background:var(--or);z-index:500;width:0;transition:width .08s linear;box-shadow:0 0 6px var(--or)}
+
+/* ─── BARRA TOPO ─── */
+#barra-topo{
+  position:fixed;top:0;left:0;right:0;z-index:300;
+}
+
+/* ─── NAV ─── */
+#nav{
+  position:fixed;top:38px;left:0;right:0;z-index:200;
+  height:64px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 48px;
+  transition:background .4s,border-color .4s;
+  border-bottom:1px solid transparent;
+}
+#nav.opaque{background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-bottom-color:var(--line)}
+.nav-logo{font-family:'Bebas Neue';font-size:16px;letter-spacing:3px;color:#0A2E5C}
+.nav-logo em{color:var(--or);font-style:normal}
+.nav-links{display:flex;gap:36px;list-style:none}
+.nav-links a{font-family:'Barlow Condensed';font-size:13px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:rgba(10,46,92,.45);transition:color .2s;position:relative;padding-bottom:2px}
+.nav-links a::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1px;background:var(--or);transition:width .35s cubic-bezier(.22,1,.36,1)}
+.nav-links a:hover{color:#0A2E5C}
+.nav-links a:hover::after{width:100%}
+.nav-cta{
+  font-family:'Barlow Condensed';font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;
+  color:#fff;background:#0A2E5C;padding:9px 24px;
+  transition:background .2s;
+}
+.nav-cta:hover{background:var(--or)}
+
+/* ─── GRAIN OVERLAY ─── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  opacity:.028;
+}
+
+/* ─── SCROLL SNAP SECTIONS ─── */
+.snap-section{
+  scroll-snap-align:start;
+  min-height:100vh;
+  position:relative;
+}
+
+/* ══════════════════════════════════
+   HERO — 1ª DOBRA (fullscreen bg)
+══════════════════════════════════ */
+#hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  overflow:hidden;
+  background:var(--bg);
+}
+
+/* Vídeo/imagem de fundo */
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+}
+.hero-bg video,
+.hero-bg img{
+  width:100%;height:100%;
+  object-fit:cover;
+  object-position:center center;
+  display:block;
+  transition:transform .6s ease;
+}
+/* Efeito zoom sutil ao hover */
+#hero:hover .hero-bg video,
+#hero:hover .hero-bg img{
+  transform:scale(1.03);
+}
+
+/* Gradiente direito→esquerdo: área direita (céu limpo) recebe a copy */
+.hero-bg::after{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,
+      rgba(255,255,255,.0) 0%,
+      rgba(255,255,255,.0) 35%,
+      rgba(255,255,255,.65) 52%,
+      rgba(255,255,255,.94) 65%,
+      #FFFFFF 80%
+    ),
+    linear-gradient(0deg,
+      rgba(255,255,255,.9) 0%,
+      transparent 22%,
+      transparent 78%,
+      rgba(255,255,255,.55) 100%
+    );
+  pointer-events:none;
+}
+
+/* Fade na base */
+.hero-fade-bottom{
+  position:absolute;bottom:0;left:0;right:0;height:180px;z-index:2;
+  background:linear-gradient(0deg,#FFFFFF 0%,transparent 100%);
+  pointer-events:none;
+}
+
+/* Copy — lado direito, sobre área clara */
+.hero-copy{
+  position:relative;z-index:3;
+  margin-left:auto;
+  padding:140px 72px 120px 48px;
+  max-width:620px;
+  width:52%;
+  display:flex;flex-direction:column;
+  justify-content:center;
+}
+
+/* Indicador de scroll-to-play */
+.hero-play-hint{
+  position:absolute;bottom:96px;left:50%;transform:translateX(-50%);
+  z-index:4;display:flex;flex-direction:column;align-items:center;gap:6px;
+  opacity:1;transition:opacity .4s;pointer-events:none;
+}
+#hero:hover .hero-play-hint{opacity:0}
+.hero-play-hint span{
+  font-family:'Barlow Condensed';font-size:10px;letter-spacing:3px;
+  text-transform:uppercase;color:rgba(10,46,92,.45);
+}
+.hero-play-hint svg{
+  animation:bounceY 1.4s ease-in-out infinite;
+  stroke:var(--or);
+}
+@keyframes bounceY{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(5px)}
+}
+
+.hero-eyebrow{
+  font-family:'Barlow Condensed';font-size:11px;font-weight:700;letter-spacing:6px;text-transform:uppercase;
+  color:var(--or);margin-bottom:20px;
+  display:flex;align-items:center;gap:12px;
+  opacity:0;animation:fadeUp .6s ease .3s forwards;
+}
+.hero-eyebrow::before{content:'';width:28px;height:1px;background:var(--or)}
+
+.hero-h1{
+  font-family:'Bebas Neue';
+  font-size:clamp(42px,4.8vw,80px);
+  line-height:.92;letter-spacing:.5px;color:#0A2E5C;
+  margin-bottom:20px;
+  white-space:nowrap;
+  opacity:0;animation:fadeUp .8s ease .5s forwards;
+}
+.hero-h1 .line-or{color:var(--or)}
+.hero-h1 .line-out{-webkit-text-stroke:1px rgba(10,46,92,.25);color:transparent}
+
+.hero-sub{
+  font-size:clamp(14px,1.2vw,16px);line-height:1.72;color:rgba(10,46,92,.65);
+  max-width:380px;margin-bottom:36px;
+  opacity:0;animation:fadeUp .6s ease .7s forwards;
+}
+
+.hero-actions{
+  display:flex;flex-direction:column;gap:12px;align-items:flex-start;
+  opacity:0;animation:fadeUp .6s ease .9s forwards;
+}
+.btn-primary{
+  font-family:'Barlow Condensed';font-size:16px;font-weight:800;letter-spacing:3px;text-transform:uppercase;
+  color:#fff;background:var(--or);padding:16px 44px;
+  display:inline-flex;align-items:center;gap:12px;
+  transition:background .2s,transform .2s;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+}
+.btn-primary:hover{background:var(--or2);transform:translateY(-2px)}
+.btn-primary svg{transition:transform .2s}
+.btn-primary:hover svg{transform:translateX(3px)}
+
+.hero-note{
+  font-family:'Barlow Condensed';font-size:12px;letter-spacing:2px;color:var(--muted);
+  display:flex;align-items:center;gap:10px;
+}
+.hero-note::before{content:'';width:16px;height:1px;background:var(--muted)}
+
+/* Stats strip — barra inferior, ocupa as duas colunas */
+.hero-stats{
+  position:absolute;bottom:0;left:0;right:0;
+  border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(4,1fr);
+  grid-column:1/-1;
+  z-index:4;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(12px);
+}
+.hs{padding:18px 20px;border-right:1px solid var(--line);text-align:center}
+.hs:last-child{border-right:none}
+.hs-n{font-family:'Bebas Neue';font-size:28px;color:var(--or);line-height:1;display:block}
+.hs-l{font-family:'Barlow Condensed';font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+
+/* ══════════════════════════════════
+   MARQUEE
+══════════════════════════════════ */
+.marquee-strip{
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  background:var(--bg1);overflow:hidden;padding:13px 0;
+}
+.marquee-track{display:flex;width:max-content;animation:mq 32s linear infinite;gap:0}
+.mw{
+  font-family:'Barlow Condensed';font-size:12px;font-weight:600;letter-spacing:5px;text-transform:uppercase;
+  color:rgba(10,46,92,.55);padding:0 32px;white-space:nowrap;
+}
+.mw-dot{color:var(--or);opacity:.5;padding:0 4px}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ══════════════════════════════════
+   2ª DOBRA — DOR
+══════════════════════════════════ */
+#dor{
+  background:var(--bg);
+  display:flex;align-items:center;
+  padding:0 48px;
+}
+/* Sand line at the bottom of each section */
+.sand-divide{
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(200,160,80,.15) 30%,rgba(232,83,10,.3) 50%,rgba(200,160,80,.15) 70%,transparent);
+}
+.dor-in{max-width:1100px;margin:0 auto;width:100%;padding:100px 0}
+.sec-tag{
+  font-family:'Barlow Condensed';font-size:11px;font-weight:700;letter-spacing:6px;text-transform:uppercase;
+  color:var(--or);display:flex;align-items:center;gap:14px;margin-bottom:20px;
+}
+.sec-tag::before{content:'';width:24px;height:1px;background:var(--or)}
+.sec-title{
+  font-family:'Bebas Neue';
+  font-size:clamp(48px,6vw,88px);
+  line-height:.9;color:#0A2E5C;margin-bottom:40px;letter-spacing:.5px;
+}
+.sec-title .or{color:var(--or)}
+.sec-title .out{-webkit-text-stroke:1px rgba(10,46,92,.2);color:transparent}
+
+/* Dor: lead + 3 feelings */
+.dor-lead{
+  max-width:680px;margin-bottom:56px;
+}
+.dor-lead p{font-size:clamp(17px,1.8vw,20px);line-height:1.82;color:rgba(10,46,92,.6);margin-bottom:14px}
+.dor-lead strong{color:#0A2E5C}
+.feelings{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);margin-bottom:48px}
+.feeling{
+  background:var(--bg);padding:32px 28px;
+  border-top:2px solid transparent;
+  transition:border-color .3s,background .3s;
+}
+.feeling:hover{border-top-color:var(--or);background:rgba(232,83,10,.04)}
+.feeling-icon{margin-bottom:16px}
+.feeling-icon svg{stroke:var(--or);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.feeling-title{
+  font-family:'Barlow Condensed';font-size:18px;font-weight:700;letter-spacing:.5px;
+  color:#0A2E5C;margin-bottom:8px;
+}
+.feeling-desc{font-size:14px;color:var(--muted);line-height:1.7}
+
+/* Custo box */
+.custo{
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);margin-bottom:48px;
+}
+.custo-left{background:var(--bg1);padding:40px 36px}
+.custo-label{
+  font-family:'Barlow Condensed';font-size:11px;font-weight:700;letter-spacing:5px;text-transform:uppercase;
+  color:var(--or);margin-bottom:20px;display:flex;align-items:center;gap:10px;
+}
+.custo-label::before{content:'';width:16px;height:1px;background:var(--or)}
+.custo-item{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:14px 0;border-bottom:1px solid var(--line);
+}
+.custo-item:last-child{border-bottom:none}
+.custo-dash{color:var(--or);flex-shrink:0;margin-top:2px}
+.custo-text{font-size:15px;color:rgba(10,46,92,.65);line-height:1.6}
+.custo-text strong{color:#0A2E5C}
+.custo-right{
+  background:var(--bg1);padding:40px 36px;
+  display:flex;flex-direction:column;justify-content:center;
+  border-left:none;
+}
+.custo-conclusion{
+  font-family:'Bebas Neue';font-size:clamp(28px,3.5vw,44px);line-height:.95;color:#0A2E5C;margin-bottom:12px;
+}
+.custo-conclusion span{color:var(--or)}
+.custo-sub{font-size:15px;color:rgba(10,46,92,.55);line-height:1.7}
+
+/* Quote final dor */
+.dor-quote{
+  padding:28px 36px;border-left:2px solid var(--or);background:rgba(232,83,10,.04);
+  max-width:560px;
+}
+.dor-quote p{font-family:'Barlow Condensed';font-size:22px;font-style:italic;font-weight:400;letter-spacing:.5px;color:rgba(10,46,92,.7);line-height:1.5}
+.dor-quote p strong{color:#0A2E5C;font-style:normal}
+
+/* ══════════════════════════════════
+   SOLUÇÃO — 2ª DOBRA continuação
+══════════════════════════════════ */
+#solucao{background:var(--bg1);display:flex;align-items:center;padding:0 48px}
+.solucao-in{max-width:1100px;margin:0 auto;width:100%;padding:100px 0}
+/* Passos 1/2/3 */
+.passos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);margin:48px 0}
+.passo{
+  background:var(--bg1);padding:48px 32px;position:relative;overflow:hidden;
+  min-height:420px;display:flex;flex-direction:column;justify-content:flex-end;
+}
+/* Imagem de fundo do card */
+.passo-img{
+  position:absolute;inset:0;z-index:0;
+  background-size:cover;background-position:center top;
+  transition:transform .6s ease;
+}
+.passo:hover .passo-img{transform:scale(1.04)}
+/* Gradiente: topo transparente → base escura para o texto */
+.passo-overlay{
+  position:absolute;inset:0;z-index:1;
+  background:linear-gradient(
+    0deg,
+    rgba(10,46,92,.88) 0%,
+    rgba(10,46,92,.55) 40%,
+    rgba(10,46,92,.15) 70%,
+    transparent 100%
+  );
+}
+/* Linha laranja no hover */
+.passo::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--or),var(--or2));
+  transform:scaleX(0);transform-origin:left;transition:transform .5s ease;z-index:3;
+}
+.passo:hover::after{transform:scaleX(1)}
+/* Conteúdo acima de tudo */
+.passo-content{position:relative;z-index:2}
+.passo-num{
+  font-family:'Bebas Neue';font-size:72px;color:var(--or);
+  line-height:1;margin-bottom:-8px;display:block;letter-spacing:-2px;
+  text-shadow:0 2px 12px rgba(0,0,0,.35);
+}
+.passo-name{font-family:'Bebas Neue';font-size:40px;color:#fff;margin-bottom:8px;display:block}
+.passo-tag{font-family:'Barlow Condensed';font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--or2);margin-bottom:12px;display:block}
+.passo-desc{font-size:14px;color:rgba(255,255,255,.78);line-height:1.75}
+/* Cards sem imagem: mantém estilo original */
+.passo--plain{background:var(--bg1);min-height:auto;justify-content:flex-start}
+.passo--plain .passo-num{color:rgba(232,83,10,.18)}
+.passo--plain .passo-name{color:#0A2E5C}
+.passo--plain .passo-tag{color:var(--or)}
+.passo--plain .passo-desc{color:var(--muted)}
+/* Result block */
+.passo-result{
+  text-align:center;padding:36px;background:rgba(232,83,10,.06);
+  border:1px solid var(--line-or);margin-bottom:0;
+}
+.passo-result p{font-family:'Bebas Neue';font-size:clamp(28px,4vw,52px);color:var(--cream);line-height:1}
+.passo-result span{color:var(--or)}
+
+/* ══════════════════════════════════
+   PROVA SOCIAL
+══════════════════════════════════ */
+#prova{background:var(--bg2);display:flex;align-items:center;padding:0 48px}
+.prova-in{max-width:1100px;margin:0 auto;width:100%;padding:100px 0}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);margin:48px 0 0}
+.testi{background:var(--bg2);padding:36px 28px;border-top:1px solid transparent;transition:border-color .3s,background .3s}
+.testi:hover{border-top-color:var(--or);background:rgba(232,83,10,.03)}
+.testi-stars{display:flex;gap:2px;margin-bottom:20px}
+.testi-star{width:14px;height:14px}
+.testi-star svg{fill:var(--or);stroke:none}
+.testi-q{font-size:clamp(15px,1.4vw,16px);line-height:1.85;color:rgba(10,46,92,.65);margin-bottom:28px;font-style:italic}
+.testi-q::before{content:'“';color:var(--or);font-size:22px;line-height:0;vertical-align:-8px;margin-right:2px}
+.testi-auth{display:flex;align-items:center;gap:12px;padding-top:20px;border-top:1px solid var(--line)}
+.testi-av{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  background:rgba(232,83,10,.1);border:1px solid var(--line-or);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue';font-size:16px;color:var(--or);
+}
+.testi-name{font-family:'Barlow Condensed';font-size:16px;font-weight:700;letter-spacing:.5px;color:#0A2E5C}
+.testi-role{font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+/* Print placeholder */
+.print-area{
+  border:1px dashed var(--line-or);padding:40px;text-align:center;margin-top:1px;
+  background:rgba(232,83,10,.02);
+}
+.print-label{font-family:'Barlow Condensed';font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--muted);margin-bottom:20px;display:block}
+.print-boxes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.print-box{
+  width:90px;height:120px;background:rgba(255,255,255,.03);border:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+}
+.print-box svg{stroke:var(--muted);fill:none;stroke-width:1.5;stroke-linecap:round}
+.print-box small{font-family:'Barlow Condensed';font-size:9px;letter-spacing:2px;color:var(--muted)}
+
+/* ══════════════════════════════════
+   ENTREGÁVEIS / OFERTA
+══════════════════════════════════ */
+#oferta{background:var(--bg);display:flex;align-items:center;padding:0 48px}
+.oferta-in{max-width:1100px;margin:0 auto;width:100%;padding:100px 0}
+.oferta-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;margin-top:48px}
+/* Entregáveis stack */
+.value-stack{display:flex;flex-direction:column;gap:1px;background:var(--line)}
+.vs-item{
+  background:var(--bg);padding:22px 24px;
+  display:flex;align-items:center;gap:16px;
+  align-items:start;border-left:2px solid transparent;
+  transition:border-color .2s,background .2s;
+}
+.vs-item:hover{border-left-color:var(--or);background:rgba(232,83,10,.03)}
+.vs-check-ico{
+  width:20px;height:20px;border:1px solid var(--or);flex-shrink:0;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;
+}
+.vs-check-ico svg{stroke:var(--or);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.vs-item > div:nth-child(2){flex:1;min-width:0}
+.vs-name{font-family:'Barlow Condensed';font-size:17px;font-weight:700;letter-spacing:.5px;color:#0A2E5C}
+.vs-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-top:3px}
+/* Miniatura de mockup dentro do vs-item */
+.vs-thumb{
+  width:64px;flex-shrink:0;align-self:center;
+  transition:transform .3s ease,filter .3s ease;
+  filter:drop-shadow(0 4px 12px rgba(10,46,92,.22));
+}
+.vs-thumb--wide{width:90px}
+.vs-thumb img{width:100%;display:block}
+.vs-item:hover .vs-thumb{
+  transform:scale(1.08) rotate(-1.5deg);
+  filter:drop-shadow(0 8px 20px rgba(10,46,92,.32));
+}
+.vs-val{
+  font-family:'Bebas Neue';font-size:36px;line-height:1;
+  font-weight:400;color:var(--or);white-space:nowrap;
+  min-width:110px;text-align:right;
+  text-shadow:0 0 32px rgba(232,83,10,.18);
+}
+.vs-total-row{
+  background:rgba(232,83,10,.06);border:1px solid var(--line-or);
+  display:flex;justify-content:space-between;align-items:center;padding:18px 24px;
+}
+.vs-total-label{font-family:'Barlow Condensed';font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+.vs-total-val{font-family:'Bebas Neue';font-size:48px;line-height:1;color:var(--muted);text-decoration:line-through}
+
+/* Price card */
+.price-card{
+  background:var(--bg1);border:1px solid var(--line);
+  position:relative;
+}
+.price-card::before{content:'';position:absolute;top:-1px;left:40px;width:80px;height:2px;background:var(--or)}
+.pc-header{padding:32px 40px;border-bottom:1px solid var(--line)}
+.pc-tag{font-family:'Barlow Condensed';font-size:11px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:var(--or);margin-bottom:20px;display:block}
+.pc-old{font-family:'Barlow Condensed';font-size:15px;letter-spacing:2px;color:var(--muted);text-decoration:line-through;margin-bottom:6px}
+.pc-parcel{font-family:'Bebas Neue';font-size:clamp(22px,3vw,32px);color:rgba(10,46,92,.5);margin-bottom:4px}
+.pc-parcel em{color:var(--or);font-style:normal}
+.pc-ou{font-family:'Barlow Condensed';font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin:6px 0}
+.pc-price{font-family:'Bebas Neue';font-size:clamp(72px,10vw,108px);line-height:1;color:var(--or)}
+.pc-price sup{font-size:36%;vertical-align:super}
+.pc-note{font-family:'Barlow Condensed';font-size:12px;letter-spacing:2px;color:var(--muted)}
+.pc-body{padding:28px 40px}
+.pc-gtee{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:16px 18px;background:rgba(232,83,10,.05);border:1px dashed var(--line-or);
+  margin-bottom:24px;
+}
+.pc-gtee svg{stroke:var(--or);fill:none;stroke-width:1.5;flex-shrink:0;margin-top:2px}
+.pc-gtee-text{font-size:13px;color:var(--muted);line-height:1.7}
+.pc-gtee-text strong{color:var(--or)}
+.btn-cta{
+  display:block;width:100%;text-align:center;
+  font-family:'Barlow Condensed';font-size:19px;font-weight:900;letter-spacing:3px;text-transform:uppercase;
+  color:#fff;background:var(--or);padding:20px;
+  transition:background .2s,transform .15s;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+}
+.btn-cta:hover{background:var(--or2);transform:scale(1.01)}
+/* Urgency text */
+.urgency-bloco{
+  margin-top:40px;padding:28px 32px;background:var(--bg1);border:1px solid var(--line);
+}
+.urgency-text{font-size:clamp(16px,1.8vw,18px);line-height:1.82;color:rgba(10,46,92,.72)}
+.urgency-text strong{color:#0A2E5C}
+.urgency-cta{
+  margin-top:20px;display:block;text-align:center;
+  font-family:'Barlow Condensed';font-size:16px;font-weight:900;letter-spacing:3px;text-transform:uppercase;
+  color:#fff;background:var(--or);padding:16px;
+  transition:background .2s;
+}
+.urgency-cta:hover{background:var(--or2)}
+
+/* ══════════════════════════════════
+   GARANTIA
+══════════════════════════════════ */
+#garantia{background:var(--bg2);display:flex;align-items:center;padding:0 48px}
+.garantia-in{max-width:1100px;margin:0 auto;width:100%;padding:100px 0}
+.garantia-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;margin-top:48px}
+.garantia-left{}
+.garantia-title{
+  font-family:'Bebas Neue';font-size:clamp(36px,4.5vw,64px);line-height:.92;
+  color:#0A2E5C;margin-bottom:8px;
+}
+.garantia-sub{
+  font-family:'Barlow Condensed';font-size:14px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--or);margin-bottom:32px;
+}
+.garantia-steps{display:flex;flex-direction:column;gap:1px;background:var(--line)}
+.gs{display:flex;gap:16px;align-items:center;padding:16px 20px;background:var(--bg2)}
+.gs-num{font-family:'Bebas Neue';font-size:28px;color:var(--or);min-width:36px;line-height:1}
+.gs-text{font-size:15px;color:rgba(10,46,92,.7)}
+.garantia-right{}
+.garantia-promise{
+  padding:32px;background:rgba(232,83,10,.05);border:1px solid var(--line-or);
+  margin-bottom:24px;
+}
+.gp-body{font-size:15px;color:rgba(10,46,92,.65);line-height:1.82;margin-bottom:16px}
+.gp-divider{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);margin-top:16px}
+.gp-half{background:var(--bg2);padding:16px;font-size:14px;color:rgba(10,46,92,.6);text-align:center;line-height:1.6}
+.gp-half strong{color:#0A2E5C;display:block}
+.garantia-note{font-size:13px;color:var(--muted);text-align:center;margin-top:16px}
+
+/* ══════════════════════════════════
+   BIO / RODRIGO SIRI
+══════════════════════════════════ */
+#bio{background:var(--bg);display:flex;align-items:center;padding:0 48px}
+.bio-in{max-width:1100px;margin:0 auto;width:100%;padding:100px 0;display:grid;grid-template-columns:280px 1fr;gap:64px;align-items:start}
+.bio-card{background:var(--bg1);border:1px solid var(--line);padding:32px;text-align:center}
+.bio-initials{
+  width:72px;height:72px;border-radius:50%;
+  background:rgba(232,83,10,.1);border:1px solid var(--line-or);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue';font-size:28px;color:var(--or);
+  margin:0 auto 16px;
+}
+.bio-card-name{font-family:'Bebas Neue';font-size:28px;color:#0A2E5C;margin-bottom:4px}
+.bio-card-role{font-family:'Barlow Condensed';font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--or);margin-bottom:20px}
+.bio-creds{display:flex;flex-direction:column;gap:8px;text-align:left}
+.bio-cred{display:flex;gap:10px;font-size:13px;color:rgba(10,46,92,.65)}
+.bio-cred::before{content:'';width:14px;height:1px;background:var(--or);flex-shrink:0;margin-top:9px}
+.bio-content{}
+.bio-origin{
+  padding:20px 24px;background:rgba(232,83,10,.04);border-left:2px solid var(--or);
+  margin-bottom:24px;
+}
+.bio-origin p{font-size:15px;color:rgba(10,46,92,.68);line-height:1.78;margin-bottom:8px}
+.bio-origin p:last-child{margin-bottom:0}
+.bio-origin strong{color:#0A2E5C}
+.bio-body{font-size:16px;color:rgba(10,46,92,.75);line-height:1.85;margin-bottom:20px}
+.bio-body strong{color:#0A2E5C}
+.bio-quote{
+  padding:20px 24px;border:1px solid var(--line-or);background:rgba(232,83,10,.04);
+  font-size:16px;color:rgba(10,46,92,.7);line-height:1.75;font-style:italic;
+  margin-bottom:24px;
+}
+.bio-quote::before{content:'“';color:var(--or);font-size:22px;line-height:0;vertical-align:-8px;margin-right:3px}
+.bio-checklist{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.bio-checklist li{display:flex;gap:10px;font-size:14px;color:rgba(10,46,92,.65)}
+.bio-checklist li::before{content:'';width:16px;height:16px;flex-shrink:0;border:1px solid var(--or);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E8530A' stroke-width='2.5'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/10px no-repeat;margin-top:1px}
+
+/* ══════════════════════════════════
+   FAQ
+══════════════════════════════════ */
+#faq{background:var(--bg1);display:flex;align-items:center;padding:0 48px}
+.faq-in{max-width:1100px;margin:0 auto;width:100%;padding:100px 0}
+.faq-list{display:flex;flex-direction:column;gap:1px;background:var(--line);max-width:760px;margin:48px auto 0}
+.faq-item{background:var(--bg1)}
+.faq-q{
+  display:flex;justify-content:space-between;align-items:center;gap:20px;
+  padding:20px 24px;cursor:none;
+  font-family:'Barlow Condensed';font-size:17px;font-weight:700;letter-spacing:.5px;color:#0A2E5C;
+  transition:color .2s;border-left:2px solid transparent;transition:border-color .2s;
+}
+.faq-q:hover{color:var(--or);border-left-color:var(--or)}
+.faq-item.open .faq-q{color:var(--or);border-left-color:var(--or)}
+.faq-icon{width:24px;height:24px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .3s,background .2s,border-color .2s}
+.faq-item.open .faq-icon{transform:rotate(45deg);background:var(--or);border-color:var(--or)}
+.faq-icon svg{stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;transition:stroke .2s}
+.faq-item.open .faq-icon svg{stroke:#000}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.22,1,.36,1)}
+.faq-item.open .faq-a{max-height:300px}
+.faq-a-in{padding:0 24px 22px;font-size:14px;color:rgba(10,46,92,.55);line-height:1.82}
+.faq-a-in strong{color:#0A2E5C}
+
+/* ══════════════════════════════════
+   ÚLTIMO CHAMADO
+══════════════════════════════════ */
+#ultimo{
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:0 48px;
+  position:relative;overflow:hidden;
+}
+#ultimo::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(232,83,10,.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.ultimo-in{max-width:720px;position:relative;z-index:1;padding:100px 0}
+.ultimo-wave-text{
+  font-family:'Bebas Neue';font-size:clamp(52px,7vw,96px);line-height:.9;color:#0A2E5C;
+  margin-bottom:20px;letter-spacing:.5px;
+}
+.ultimo-wave-text span{color:var(--or)}
+.ultimo-wave-text .out{-webkit-text-stroke:1px rgba(255,255,255,.2);color:transparent}
+.ultimo-sub{font-size:18px;color:rgba(10,46,92,.55);line-height:1.75;margin-bottom:40px;max-width:520px;margin-left:auto;margin-right:auto}
+.ultimo-checks{display:flex;justify-content:center;gap:28px;flex-wrap:wrap;margin-bottom:40px}
+.uc{display:flex;align-items:center;gap:8px;font-family:'Barlow Condensed';font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(10,46,92,.6)}
+.uc svg{stroke:var(--or);fill:none;stroke-width:2;flex-shrink:0}
+.aviso{
+  margin-top:20px;
+  font-family:'Barlow Condensed';font-size:11px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--muted);
+}
+
+/* ══════════════════════════════════
+   FOOTER
+══════════════════════════════════ */
+footer{
+  background:var(--bg2);border-top:1px solid var(--line);
+  padding:28px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-logo{font-family:'Bebas Neue';font-size:18px;letter-spacing:4px;color:rgba(10,46,92,.3)}
+.footer-logo em{color:var(--or);font-style:normal}
+.footer-copy{font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;color:var(--muted)}
+.footer-copy strong{color:var(--or)}
+
+/* ─── REVEAL ─── */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .75s ease,transform .75s ease}
+.reveal.from-l{transform:translateX(-20px)}
+.reveal.from-r{transform:translateX(20px)}
+.reveal.visible{opacity:1;transform:none}
+
+/* ─── SAND DIVIDE ─── */
+.sand-divide{
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(10,46,92,.12) 30%,rgba(232,83,10,.3) 50%,rgba(10,46,92,.12) 70%,transparent);
+}
+
+/* ─── RESPONSIVE ─── */
+
+/* Toque: esconde cursor customizado em dispositivos touch */
+@media(pointer:coarse){
+  #cur-dot,#cur-ring{display:none}
+  body,button{cursor:auto}
+}
+
+/* Acessibilidade: pausa marquee para quem prefere menos movimento */
+@media(prefers-reduced-motion:reduce){
+  .marquee-track{animation:none}
+  .reveal{transition:none}
+}
+
+/* ── TABLET: 1024px ── */
+@media(max-width:1024px){
+  html{scroll-snap-type:none}
+
+  #nav{padding:0 24px}
+
+  .hero-copy{margin-left:0;padding:130px 24px 100px 24px;max-width:100%;width:100%}
+  .hero-h1{white-space:normal;font-size:clamp(36px,8vw,56px)}
+  .hero-bg video,.hero-bg img{object-position:40% center}
+  .hero-bg::after{
+    background:linear-gradient(0deg,
+      rgba(255,255,255,.98) 0%,
+      rgba(255,255,255,.88) 35%,
+      rgba(255,255,255,.5) 58%,
+      transparent 82%
+    );
+  }
+  /* Stats: 2 colunas em tablet para não apertar */
+  .hero-stats{grid-template-columns:repeat(2,1fr)}
+  .hs{border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .hs:nth-child(2),.hs:last-child{border-right:none}
+  .hs:nth-child(3),.hs:last-child{border-bottom:none}
+
+  #dor,#solucao,#prova,#oferta,#garantia,#bio,#faq,#ultimo{padding:0 24px}
+  .dor-in,.solucao-in,.prova-in,.oferta-in,.garantia-in,.faq-in,.ultimo-in{padding:72px 0}
+
+  .feelings,.testi-grid,.passos-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Cards de passo: altura mínima menor em 2 colunas */
+  .passo{min-height:320px}
+
+  .custo{grid-template-columns:1fr}
+  .oferta-grid{grid-template-columns:1fr;gap:40px}
+  .garantia-grid{grid-template-columns:1fr;gap:40px}
+  .bio-in{display:grid;grid-template-columns:160px 1fr;gap:28px;align-items:start;padding:72px 0}
+
+  /* Miniaturas: reduz em tablet */
+  .vs-thumb{width:48px}
+  .vs-thumb--wide{width:70px}
+
+  footer{padding:24px;flex-direction:column;gap:8px;text-align:center}
+}
+
+/* ── MOBILE PORTRAIT: 768px ── */
+@media(max-width:768px){
+  /* Barra topo: uma linha, sem quebrar */
+  #barra-topo{font-size:9px;letter-spacing:1.5px;padding:7px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* Nav: hamburguer simples — esconde links, mantém logo + CTA */
+  .nav-links{display:none}
+  #nav{padding:0 16px;top:34px}
+  #barra-topo{padding:7px 12px}
+  .nav-cta{padding:8px 16px;font-size:11px}
+
+  /* Hero mobile: replica desktop mas adaptado para portrait */
+  #hero{align-items:flex-end}
+  .hero-copy{
+    margin-left:0;width:100%;max-width:100%;
+    padding:0 20px 100px 20px;
+    background:none;
+  }
+  /* Gradiente mobile: branco na base (texto), escurece levemente o meio, vídeo livre no topo */
+  .hero-bg::after{
+    background:
+      linear-gradient(0deg,
+        #FFFFFF 0%,
+        rgba(255,255,255,.98) 18%,
+        rgba(255,255,255,.82) 32%,
+        rgba(255,255,255,.35) 48%,
+        rgba(0,0,0,.08) 65%,
+        rgba(0,0,0,.12) 100%
+      );
+  }
+  .hero-bg video,.hero-bg img{object-position:55% 10%}
+  .hero-h1{font-size:clamp(34px,9vw,52px);white-space:normal;color:#0A2E5C;text-shadow:0 0 20px rgba(255,255,255,.9)}
+  .hero-sub{font-size:14px;max-width:100%;color:rgba(10,46,92,.8)}
+  .hero-eyebrow{margin-bottom:12px}
+  .hero-note{color:rgba(10,46,92,.65)}
+  .hero-actions{width:100%}
+  .btn-primary{width:100%;justify-content:center}
+  .hero-play-hint{display:none}
+  .hero-stats{grid-template-columns:repeat(2,1fr)}
+
+  /* Grids: tudo 1 coluna */
+  .feelings,.testi-grid,.passos-grid{grid-template-columns:1fr}
+  .bio-in{grid-template-columns:1fr;gap:20px}
+
+  /* Passos: altura automática em coluna única */
+  .passo{min-height:280px;padding:28px 20px}
+
+  .dor-in,.solucao-in,.prova-in,.oferta-in,.garantia-in,.faq-in,.ultimo-in{padding:52px 0}
+  #dor,#solucao,#prova,#oferta,#garantia,#bio,#faq,#ultimo{padding:0 16px}
+
+  .oferta-grid{gap:24px}
+  .garantia-grid{gap:24px}
+
+  /* vs-item: flex-wrap para miniaturas não espremerem */
+  .vs-item{flex-wrap:wrap;gap:12px}
+  .vs-thumb,.vs-thumb--wide{width:52px}
+  .vs-val{width:100%;text-align:left;font-size:28px}
+
+  .feeling{padding:20px 16px}
+  .testi{padding:22px 16px}
+  .custo-left,.custo-right{padding:24px 16px}
+  .pc-header{padding:24px 20px}
+  .pc-body{padding:20px 20px}
+  .urgency-bloco{padding:20px 16px}
+
+  /* Botão primário: largura total no mobile */
+  .btn-primary{width:100%;justify-content:center;padding:16px 24px}
+  /* Fallback clip-path para Safari mobile */
+  @supports not (clip-path:polygon(0 0)){
+    .btn-primary{border-radius:4px}
+  }
+
+  .pc-price{font-size:clamp(56px,14vw,88px)}
+
+  footer{padding:20px 16px}
+}
+
+/* ── MOBILE PEQUENO: 480px ── */
+@media(max-width:480px){
+  #barra-topo{font-size:9px;letter-spacing:1.5px;line-height:1.4}
+
+  .hero-copy{padding:0 16px 90px 16px}
+  .hero-h1{font-size:clamp(32px,10vw,48px)}
+  .hero-stats{grid-template-columns:1fr 1fr}
+  .hs{padding:12px 10px}
+  .hs-n{font-size:22px}
+
+  .sec-title{font-size:clamp(36px,10vw,60px)}
+  .ultimo-wave-text{font-size:clamp(36px,10vw,60px)}
+
+  .passo{min-height:240px;padding:24px 16px}
+  .passo-num{font-size:56px}
+  .passo-name{font-size:32px}
+
+  .vs-item{padding:14px 12px;gap:10px}
+  .vs-thumb,.vs-thumb--wide{width:44px}
+  .vs-val{font-size:24px}
+
+  .pc-price{font-size:clamp(48px,14vw,72px)}
+  .pc-header{padding:20px 16px}
+  .pc-body{padding:16px 16px}
+
+  .feeling,.testi{padding:18px 14px}
+  .ultimo-checks{flex-direction:column;align-items:center;gap:10px}
+  footer{padding:16px 12px;gap:6px}
+}
+
+/* ─── HAMBURGUER + MENU MOBILE ─── */
+.ham-line{display:block;width:22px;height:2px;background:#0A2E5C;border-radius:2px;transition:transform .3s,opacity .3s}
+#nav.menu-open .ham-line:nth-child(1){transform:translateY(7px) rotate(45deg)}
+#nav.menu-open .ham-line:nth-child(2){opacity:0}
+#nav.menu-open .ham-line:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+#mobile-menu{
+  display:none;position:fixed;top:102px;left:0;right:0;z-index:190;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);
+  padding:16px 20px 20px;
+  flex-direction:column;gap:4px;
+}
+#mobile-menu.open{display:flex}
+#mobile-menu a{
+  font-family:'Barlow Condensed';font-size:16px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:#0A2E5C;padding:12px 0;border-bottom:1px solid var(--line);
+}
+#mobile-menu a:last-child{border-bottom:none;color:var(--or)}
+@media(max-width:768px){
+  #navToggle{display:flex !important}
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<div id="cur">
+  <div id="cur-dot"></div>
+  <div id="cur-ring"></div>
+</div>
+<div id="progress"></div>
+
+<!-- ══ BARRA EXCLUSIVO ══ -->
+<div id="barra-topo" style="background:var(--or);padding:9px 24px;text-align:center;font-family:'Barlow Condensed';font-size:12px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#000;">
+  Exclusivo para professores de futevôlei e jogadores que querem começar a dar aula sem travar
+</div>
+
+<!-- ══ NAV ══ -->
+<nav id="nav">
+  <div class="nav-logo">RODRIGO <em>SIRI</em> FUTEVÔLEI</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#dor">O Problema</a></li>
+    <li><a href="#solucao">A Solução</a></li>
+    <li><a href="#oferta">Oferta</a></li>
+    <li><a href="#bio">O Especialista</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:12px">
+    <a href="#oferta" class="nav-cta">Quero acesso</a>
+    <button id="navToggle" aria-label="Menu" style="display:none;flex-direction:column;gap:5px;padding:4px;cursor:pointer">
+      <span class="ham-line"></span>
+      <span class="ham-line"></span>
+      <span class="ham-line"></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MENU MOBILE -->
+<div id="mobile-menu">
+  <a href="#dor" onclick="closeMobileMenu()">O Problema</a>
+  <a href="#solucao" onclick="closeMobileMenu()">A Solução</a>
+  <a href="#oferta" onclick="closeMobileMenu()">Oferta</a>
+  <a href="#bio" onclick="closeMobileMenu()">O Especialista</a>
+  <a href="#oferta" onclick="closeMobileMenu()">Quero Acesso</a>
+</div>
+
+<!-- ══ 1ª DOBRA — HERO ══ -->
+<section id="hero" class="snap-section">
+
+  <!-- Background: vídeo parado, play ao hover/scroll -->
+  <div class="hero-bg">
+    <video id="heroVideo" src="hero-video.mp4.mp4" muted playsinline preload="metadata" poster="hero-video-frame.jpg"></video>
+  </div>
+  <div class="hero-fade-bottom"></div>
+
+  <!-- Hint: scroll para ver o vídeo -->
+  <div class="hero-play-hint">
+    <span>role para ver</span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 5v14M5 12l7 7 7-7"/>
+    </svg>
+  </div>
+
+  <!-- Copy sobreposto -->
+  <div class="hero-copy">
+    <div class="hero-eyebrow">Protocolo Trinca</div>
+    <h1 class="hero-h1">
+      Protocolo de Aula<br>
+      Sem <span class="line-or">Improviso</span>
+    </h1>
+    <p class="hero-sub">Siga um passo a passo claro para escolher, organizar e aplicar dinâmicas que fazem a aula fluir do início ao fim.</p>
+    <div class="hero-actions">
+      <a href="#oferta" class="btn-primary">
+        Quero ter acesso agora
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <span class="hero-note">Sem complicação, direto ao que importa</span>
+    </div>
+  </div>
+
+  <!-- Stats strip: barra inferior sobre a imagem -->
+  <div class="hero-stats">
+    <div class="hs"><span class="hs-n" id="hs1">0</span><span class="hs-l">Professores</span></div>
+    <div class="hs"><span class="hs-n" id="hs2">0</span><span class="hs-l">Anos no esporte</span></div>
+    <div class="hs"><span class="hs-n" id="hs3">0</span><span class="hs-l">CTs operados</span></div>
+    <div class="hs"><span class="hs-n" id="hs4">0</span><span class="hs-l">Min. de preparo</span></div>
+  </div>
+
+  <!-- (slot para vídeo — quando pronto, substituir img por video tag) -->
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-strip">
+  <div class="marquee-track">
+    <span class="mw">Futevôlei</span><span class="mw-dot">✦</span>
+    <span class="mw">Protocolo Trinca</span><span class="mw-dot">✦</span>
+    <span class="mw">Sem Improviso</span><span class="mw-dot">✦</span>
+    <span class="mw">Aula que Flui</span><span class="mw-dot">✦</span>
+    <span class="mw">Rodrigo Siri</span><span class="mw-dot">✦</span>
+    <span class="mw">CiriFutevôlei</span><span class="mw-dot">✦</span>
+    <span class="mw">Areia Carioca</span><span class="mw-dot">✦</span>
+    <span class="mw">Futevôlei</span><span class="mw-dot">✦</span>
+    <span class="mw">Protocolo Trinca</span><span class="mw-dot">✦</span>
+    <span class="mw">Sem Improviso</span><span class="mw-dot">✦</span>
+    <span class="mw">Aula que Flui</span><span class="mw-dot">✦</span>
+    <span class="mw">Rodrigo Siri</span><span class="mw-dot">✦</span>
+    <span class="mw">CiriFutevôlei</span><span class="mw-dot">✦</span>
+    <span class="mw">Areia Carioca</span><span class="mw-dot">✦</span>
+  </div>
+</div>
+<div class="sand-divide"></div>
+
+<!-- ══ 2ª DOBRA — DOR ══ -->
+<section id="dor" class="snap-section">
+  <div class="dor-in">
+    <div class="reveal">
+      <div class="sec-tag">O problema</div>
+      <h2 class="sec-title">Você chega na areia<br>sem saber o que <span class="or">fazer?</span></h2>
+    </div>
+    <div class="dor-lead reveal">
+      <p>Pare de chegar na aula <strong>sem saber exatamente o que fazer…</strong> de ficar olhando para os alunos enquanto tenta puxar alguma ideia na cabeça, e nada vem.</p>
+      <p>Pare de improvisar qualquer dinâmica só pra não deixar a aula morrer, enquanto vê outros professores conduzindo aulas <strong>organizadas, seguras e com alunos evoluindo.</strong></p>
+    </div>
+
+    <div class="feelings">
+      <div class="feeling reveal">
+        <div class="feeling-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <div class="feeling-title">O silêncio antes de começar</div>
+        <p class="feeling-desc">Todos os olhos em você. A pressão de abrir a aula sem saber por onde começar.</p>
+      </div>
+      <div class="feeling reveal">
+        <div class="feeling-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="feeling-title">A pressão de decidir rápido</div>
+        <p class="feeling-desc">Cada segundo parado parece uma eternidade. Nenhuma ideia, nenhum plano, só improviso.</p>
+      </div>
+      <div class="feeling reveal">
+        <div class="feeling-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="feeling-title">A insegurança de não saber</div>
+        <p class="feeling-desc">A dúvida de se aquilo vai funcionar. E no final da aula, a sensação pesada que fica.</p>
+      </div>
+    </div>
+
+    <div class="dor-quote reveal">
+      <p><strong>"poderia ter sido melhor"</strong></p>
+    </div>
+
+    <div class="custo reveal" style="margin-top:40px">
+      <div class="custo-left">
+        <div class="custo-label">Cada dia sem resolver isso custa</div>
+        <div class="custo-item">
+          <span class="custo-dash">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+          </span>
+          <span class="custo-text"><strong>Tempo perdido</strong> tentando montar treino na hora ou na véspera</span>
+        </div>
+        <div class="custo-item">
+          <span class="custo-dash">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+          </span>
+          <span class="custo-text"><strong>Alunos desmotivados</strong> que não voltam para a próxima aula</span>
+        </div>
+        <div class="custo-item">
+          <span class="custo-dash">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+          </span>
+          <span class="custo-text"><strong>Dinheiro que você poderia estar ganhando</strong> com aulas melhores</span>
+        </div>
+      </div>
+      <div class="custo-right">
+        <div class="custo-conclusion">Toda aula vira<br>uma nova <span>dor de cabeça</span></div>
+        <p class="custo-sub">Mas não precisa ser assim. Existe um caminho mais claro do que você imagina.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sand-divide"></div>
+
+<!-- ══ SOLUÇÃO ══ -->
+<section id="solucao" class="snap-section">
+  <div class="solucao-in">
+    <div class="reveal">
+      <div class="sec-tag">A solução</div>
+      <h2 class="sec-title">Foi exatamente pra resolver<br>isso que nasceu o <span class="or">Protocolo Trinca</span></h2>
+    </div>
+    <div style="max-width:680px;margin-bottom:56px" class="reveal">
+      <p style="font-size:clamp(16px,1.6vw,18px);line-height:1.82;color:rgba(10,46,92,.68)">Um sistema simples e direto que já vem ajudando professores e jogadores a saber exatamente o que aplicar, organizar a aula do início ao fim e conduzir treinos com mais segurança e fluidez.</p>
+    </div>
+
+    <div class="passos-grid">
+      <div class="passo reveal">
+        <div class="passo-img" style="background-image:url('passo-01-entende.png');background-position:center 25%;background-size:110%"></div>
+        <div class="passo-overlay"></div>
+        <div class="passo-content">
+          <span class="passo-num">01</span>
+          <span class="passo-name">Entende</span>
+          <span class="passo-tag">o momento da aula</span>
+          <p class="passo-desc">Você chega sabendo exatamente em que ponto os alunos estão. Sem suposição, sem improviso de última hora.</p>
+        </div>
+      </div>
+      <div class="passo reveal">
+        <div class="passo-img" style="background-image:url('passo-02-escolhe.png');background-position:center 20%;background-size:110%"></div>
+        <div class="passo-overlay"></div>
+        <div class="passo-content">
+          <span class="passo-num">02</span>
+          <span class="passo-name">Escolhe</span>
+          <span class="passo-tag">a dinâmica certa</span>
+          <p class="passo-desc">O protocolo mostra qual dinâmica usar, quando usar e por quê, mantendo o ritmo do início ao fim da aula.</p>
+        </div>
+      </div>
+      <div class="passo reveal">
+        <div class="passo-img" style="background-image:url('passo-03-aplica.png');background-position:center 20%"></div>
+        <div class="passo-overlay"></div>
+        <div class="passo-content">
+          <span class="passo-num">03</span>
+          <span class="passo-name">Aplica</span>
+          <span class="passo-tag">com segurança</span>
+          <p class="passo-desc">Você leva pra areia com clareza. O aluno sente a evolução na hora. Presença, confiança e respeito natural.</p>
+        </div>
+      </div>
+      <div class="passo-result reveal">
+        <p>E pronto. <span>Sua aula simplesmente flui.</span></p>
+      </div>
+    </div></div>
+</section>
+
+<div class="sand-divide"></div>
+
+<!-- ══ PROVA SOCIAL ══ -->
+<section id="prova" class="snap-section">
+  <div class="prova-in">
+    <div class="reveal">
+      <div class="sec-tag">Resultados reais</div>
+      <h2 class="sec-title">Olha quem já tem transformado<br>suas aulas com o <span class="or">Protocolo</span></h2>
+    </div>
+
+    <div class="testi-grid">
+      <div class="testi reveal">
+        <div class="testi-stars">
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        </div>
+        <p class="testi-q">Eu travava muito no início da aula… em menos de 3 dias usando o protocolo, já consegui chegar com tudo organizado e a aula mudou completamente.</p>
+        <div class="testi-auth"><div class="testi-av">P</div><div><div class="testi-name">Professor</div><div class="testi-role">Utilizando o Protocolo Trinca</div></div></div>
+      </div>
+      <div class="testi reveal">
+        <div class="testi-stars">
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        </div>
+        <p class="testi-q">Antes eu perdia quase 1 hora pensando no treino. Hoje em 5 minutos já sei exatamente o que aplicar.</p>
+        <div class="testi-auth"><div class="testi-av">P</div><div><div class="testi-name">Professor</div><div class="testi-role">Utilizando o Protocolo Trinca</div></div></div>
+      </div>
+      <div class="testi reveal">
+        <div class="testi-stars">
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="testi-star"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        </div>
+        <p class="testi-q">Minhas aulas eram repetitivas… em uma semana já consegui variar muito mais e os alunos começaram a elogiar.</p>
+        <div class="testi-auth"><div class="testi-av">P</div><div><div class="testi-name">Professor</div><div class="testi-role">Utilizando o Protocolo Trinca</div></div></div>
+      </div>
+    </div>
+
+    <div class="print-area reveal">
+      <span class="print-label">Inserir prints e fotos reais aqui</span>
+      <div class="print-boxes">
+        <div class="print-box"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="17" x2="13" y2="17"/></svg><small>Print 01</small></div>
+        <div class="print-box"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="17" x2="13" y2="17"/></svg><small>Print 02</small></div>
+        <div class="print-box"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="17" x2="13" y2="17"/></svg><small>Print 03</small></div>
+        <div class="print-box"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><small>Foto 01</small></div>
+        <div class="print-box"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><small>Foto 02</small></div>
+      </div>
+    </div>
+
+    <div style="max-width:680px;margin:48px auto 0;text-align:center" class="reveal">
+      <p style="font-size:clamp(17px,1.8vw,20px);line-height:1.82;color:rgba(10,46,92,.68)">Hoje você não está levando apenas algumas dinâmicas… Você está entrando em um sistema que muda completamente a experiência da sua aula, fazendo você se sentir <strong style="color:#0A2E5C">mais seguro, mais preparado e muito mais respeitado pelos alunos.</strong></p>
+    </div>
+  </div>
+</section>
+
+<div class="sand-divide"></div>
+
+<!-- ══ OFERTA ══ -->
+<section id="oferta" class="snap-section">
+  <div class="oferta-in">
+    <div class="reveal">
+      <div class="sec-tag">Oferta completa</div>
+      <h2 class="sec-title">Tudo que você<br><span class="or">leva hoje</span></h2>
+    </div>
+
+    <div class="oferta-grid">
+      <!-- Stack de valor -->
+      <div>
+        <div class="value-stack reveal">
+          <div class="vs-item">
+            <div class="vs-check-ico"><svg width="10" height="10" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div><div class="vs-name">Grupo VIP: Comunidade de Professores</div><div class="vs-desc">Troque experiências, tire dúvidas e evolua junto com outros professores no mesmo caminho.</div></div>
+            <div class="vs-val">Imensurável</div>
+          </div>
+          <div class="vs-item">
+            <div class="vs-check-ico"><svg width="10" height="10" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div><div class="vs-name">Sala do Destrave: Aula ao Vivo Mensal</div><div class="vs-desc">Encontro mensal com o Rodrigo Siri para ajustar suas aulas, tirar dúvidas de gestão dos CTs e garantir que você está aplicando do jeito certo.</div></div>
+            <div class="vs-val">Imensurável</div>
+          </div>
+          <div class="vs-item">
+            <div class="vs-check-ico"><svg width="10" height="10" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div><div class="vs-name">Checklist Pré-Aula Sem Travar</div><div class="vs-desc">Abra antes da aula e saiba exatamente o que revisar para começar com segurança, sem esquecer nada e sem improviso.</div></div>
+            <div class="vs-thumb"><img src="mockup-checklist.png" alt="Checklist Pré-Aula"></div>
+            <div class="vs-val">R$ 67</div>
+          </div>
+          <div class="vs-item">
+            <div class="vs-check-ico"><svg width="10" height="10" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div><div class="vs-name">Plano Semanal de Aulas Prontas</div><div class="vs-desc">Uma semana inteira de aulas estruturadas para você parar de pensar e simplesmente executar.</div></div>
+            <div class="vs-thumb vs-thumb--wide"><img src="mockup-plano-semanal.png" alt="Plano Semanal"></div>
+            <div class="vs-val">R$ 197</div>
+          </div>
+          <div class="vs-item">
+            <div class="vs-check-ico"><svg width="10" height="10" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div><div class="vs-name">Mini Manual de Comunicação na Aula</div><div class="vs-desc">Como falar com os alunos de forma leve, clara e segura, conduzindo a aula com mais presença e confiança.</div></div>
+            <div class="vs-thumb"><img src="mockup-manual.png" alt="Manual de Comunicação"></div>
+            <div class="vs-val">R$ 97</div>
+          </div>
+          <div class="vs-item" style="background:rgba(232,83,10,.03);border-left:2px solid var(--or)">
+            <div class="vs-check-ico"><svg width="10" height="10" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div><div class="vs-name">Não são materiais soltos</div><div class="vs-desc" style="color:rgba(10,46,92,.6)">É um sistema que te mostra quando, como e por que usar cada um.</div></div>
+            <div class="vs-val"></div>
+          </div>
+        </div>
+        <div class="vs-total-row reveal" style="margin-top:1px">
+          <span class="vs-total-label">Valor total separado</span>
+          <span class="vs-total-val">R$ 807</span>
+        </div>
+      </div>
+
+      <!-- Price card -->
+      <div class="price-card reveal">
+        <div class="pc-header">
+          <span class="pc-tag">Somente hoje</span>
+          <p class="pc-old">De R$ 807,00</p>
+          <p class="pc-parcel"><em>12x de R$ 5,58</em></p>
+          <p class="pc-ou">ou à vista por</p>
+          <div class="pc-price"><sup>R$</sup>67</div>
+          <p class="pc-note">Cartão de crédito ou PIX. Acesso imediato.</p>
+        </div>
+        <div class="pc-body">
+          <div class="pc-gtee">
+            <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <div class="pc-gtee-text"><strong>Garantia de 60 dias.</strong> Acesse tudo, teste na areia. Se não for o que esperava, devolvemos 100%, sem burocracia, sem perguntas.</div>
+          </div>
+          <a href="#" class="btn-cta">Quero ter acesso agora</a>
+          <p style="text-align:center;margin-top:12px;font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;color:var(--muted)">Este valor pode sofrer reajuste a qualquer momento</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Urgência coloquial -->
+    <div class="urgency-bloco reveal">
+      <p class="urgency-text">Bicho… tu vai continuar chegando na areia sem saber o que passar pros alunos mesmo? É literalmente <strong>menos que o valor de uma aula de futevôlei</strong> pra parar de improvisar nas aulas. Na moral… <strong>tu tá vacilando se não entrar agora.</strong> Clica no link aí logo, vai.</p>
+      <a href="#" class="urgency-cta">QUERO TER ACESSO AGORA</a>
+    </div>
+  </div>
+</section>
+
+<div class="sand-divide"></div>
+
+<!-- ══ GARANTIA ══ -->
+<section id="garantia" class="snap-section">
+  <div class="garantia-in">
+    <div class="reveal">
+      <div class="sec-tag">Sem risco</div>
+      <h2 class="sec-title">Garantia Trinca<br><span class="or">60 dias completos</span><br>para testar</h2>
+    </div>
+    <div class="garantia-grid">
+      <div class="garantia-left reveal from-l">
+        <div class="garantia-steps">
+          <div class="gs"><span class="gs-num">01</span><span class="gs-text">Entra hoje na Trinca.</span></div>
+          <div class="gs"><span class="gs-num">02</span><span class="gs-text">Assiste as aulas.</span></div>
+          <div class="gs"><span class="gs-num">03</span><span class="gs-text">Aplica as dinâmicas.</span></div>
+          <div class="gs"><span class="gs-num">04</span><span class="gs-text">Organiza seus treinos.</span></div>
+          <div class="gs"><span class="gs-num">05</span><span class="gs-text">Testa tudo na prática na areia.</span></div>
+        </div>
+      </div>
+      <div class="garantia-right reveal from-r">
+        <div class="garantia-promise">
+          <p class="gp-body">Se por alguma razão você entrar no Protocolo e descobrir que não é o que estava esperando, dentro de 60 dias após a compra você tem direito ao arrependimento e pode solicitar o seu dinheiro de volta.</p>
+          <div class="gp-divider">
+            <div class="gp-half">ou o Protocolo Trinca<br><strong>melhora suas aulas…</strong></div>
+            <div class="gp-half">ou você<br><strong>não paga nada por isso.</strong></div>
+          </div>
+        </div>
+        <p class="garantia-note">Sem burocracia. Sem enrolação. Sem precisar justificar nada.</p>
+        <div style="margin-top:28px">
+          <a href="#" class="btn-cta">Garantir meu acesso agora</a>
+          <p style="text-align:center;margin-top:12px;font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;color:var(--muted)">HOJE VOCÊ AINDA CONSEGUE ENTRAR POR ESSE VALOR. DEPOIS, PODE NÃO ESTAR MAIS DISPONÍVEL.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sand-divide"></div>
+
+<!-- ══ BIO ══ -->
+<section id="bio" class="snap-section">
+  <div class="bio-in">
+    <div class="bio-card reveal from-l">
+      <div class="bio-initials">RS</div>
+      <div class="bio-card-name">RODRIGO SIRI</div>
+      <div class="bio-card-role">Criador do Protocolo Trinca</div>
+      <div class="bio-creds">
+        <div class="bio-cred">+10 anos de experiência no futevôlei</div>
+        <div class="bio-cred">8 unidades de CT construídas e operadas</div>
+        <div class="bio-cred">Mentor de Gabriel Ralha</div>
+        <div class="bio-cred">Formador de professores</div>
+      </div>
+    </div>
+    <div class="bio-content reveal from-r">
+      <div class="sec-tag">O especialista</div>
+      <h2 class="sec-title" style="font-size:clamp(40px,5vw,72px)">RODRIGO<br>SIRI</h2>
+      <div class="bio-origin">
+        <p>Antes de formar professores, estruturar aulas e ajudar alunos a evoluírem no futevôlei, ele também já passou pelo outro lado:</p>
+        <p>chegar na areia sem saber exatamente o que aplicar, perder tempo tentando montar treino na hora, sentir a pressão de conduzir uma aula sem um sistema claro.</p>
+        <p><strong>E foi justamente vivendo isso na prática que nasceu a Trinca.</strong></p>
+      </div>
+      <p class="bio-body">Com mais de 10 anos de experiência no futevôlei, já construiu e operou <strong>8 unidades de centro de treinamento</strong>, formando alunos, organizando aulas e vivendo diariamente a rotina da areia. Também foi <strong>mentor de Gabriel Ralha</strong>, ajudando no desenvolvimento técnico e estratégico dentro do esporte.</p>
+      <div class="bio-quote">"O que mais me fez evoluir não foi decorar exercício… foi criar um sistema que faz a aula fluir."</div>
+      <ul class="bio-checklist">
+        <li>parar de improvisar</li>
+        <li>conduzir aulas melhores</li>
+        <li>organizar seus treinos</li>
+        <li>chegar na areia com muito mais confiança</li>
+      </ul>
+      <a href="#oferta" class="btn-primary">
+        Quero o Protocolo Trinca
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="sand-divide"></div>
+
+<!-- ══ FAQ ══ -->
+<section id="faq" class="snap-section">
+  <div class="faq-in">
+    <div class="reveal" style="text-align:center">
+      <div class="sec-tag" style="justify-content:center">Dúvidas</div>
+      <h2 class="sec-title">Perguntas<br><span class="or">frequentes</span></h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">E se eu ainda não tiver experiência dando aula?<div class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+        <div class="faq-a"><div class="faq-a-in">Sem problema. A Trinca foi criada justamente para ajudar professores e jogadores que travam na hora de organizar a aula ou não sabem exatamente o que aplicar. Você vai receber um protocolo simples, direto e fácil de seguir. <strong>É por isso que tanta gente está começando pela Trinca.</strong></div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Isso serve só para professores?<div class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+        <div class="faq-a"><div class="faq-a-in">Não. Mesmo que você ainda esteja começando no futevôlei ou queira começar a dar aulas futuramente, a Trinca já vai te ajudar a entender como estruturar treinos e conduzir melhor uma aula na areia.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">As dinâmicas servem para qualquer nível?<div class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+        <div class="faq-a"><div class="faq-a-in">Sim. Você poderá adaptar as dinâmicas para diferentes tipos de aluno, desde iniciantes até níveis mais avançados. <strong>A ideia é justamente facilitar sua vida dentro da aula.</strong></div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Vou conseguir aplicar mesmo sem muito tempo?<div class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+        <div class="faq-a"><div class="faq-a-in">Sim. O protocolo foi pensado para ser simples e aplicável. Nada complicado ou cheio de teoria. <strong>É literalmente abrir, entender e levar pra areia.</strong></div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">E se eu entrar e não gostar?<div class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+        <div class="faq-a"><div class="faq-a-in">Você tem 60 dias de garantia total. Pode acessar, assistir e testar tudo com calma. Se não fizer sentido pra você, basta pedir o reembolso. <strong>Simples assim.</strong></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sand-divide"></div>
+
+<!-- ══ ÚLTIMO CHAMADO ══ -->
+<section id="ultimo" class="snap-section">
+  <div class="ultimo-in reveal">
+    <h2 class="ultimo-wave-text">
+      Você pode continuar<br>
+      chegando na aula <span>improvisando…</span><br>
+      ou pode <span class="out">começar</span><br>
+      a entrar na <span>areia de verdade.</span>
+    </h2>
+    <p class="ultimo-sub">Acesso imediato. Garantia de 60 dias. Oferta promocional por tempo limitado.</p>
+    <a href="#" class="btn-primary" style="margin:0 auto;display:inline-flex">
+      QUERO ACESSAR A TRINCA AGORA
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <div class="ultimo-checks">
+      <div class="uc"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Acesso imediato</div>
+      <div class="uc"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Garantia de 60 dias</div>
+      <div class="uc"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Oferta por tempo limitado</div>
+    </div>
+    <p class="aviso">Este valor pode sofrer reajuste a qualquer momento</p>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-logo">RODRIGO <em>SIRI</em> FUTEVÔLEI</div>
+  <p class="footer-copy">© 2025 <strong>Protocolo Trinca · Rodrigo Siri Futevôlei</strong>. Todos os direitos reservados.</p>
+</footer>
+
+<script>
+'use strict';
+// CURSOR
+var dot=document.getElementById('cur-dot'),ring=document.getElementById('cur-ring');
+var rx=0,ry=0,pending=false,mx=0,my=0;
+document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;if(!pending){pending=true;requestAnimationFrame(function(){pending=false;dot.style.left=mx+'px';dot.style.top=my+'px';rx+=(mx-rx)*.14;ry+=(my-ry)*.14;ring.style.left=rx+'px';ring.style.top=ry+'px';})}},{passive:true});
+(function raf(){requestAnimationFrame(raf);}());
+
+// NAV opaque on scroll
+window.addEventListener('scroll',function(){
+  document.getElementById('nav').classList.toggle('opaque',scrollY>60);
+  document.getElementById('progress').style.width=(scrollY/(document.body.scrollHeight-innerHeight)*100)+'%';
+},{passive:true});
+
+// HAMBURGUER MENU
+var navToggle = document.getElementById('navToggle');
+var mobileMenu = document.getElementById('mobile-menu');
+var nav = document.getElementById('nav');
+function closeMobileMenu(){
+  mobileMenu.classList.remove('open');
+  nav.classList.remove('menu-open');
+}
+if(navToggle){
+  navToggle.addEventListener('click',function(){
+    mobileMenu.classList.toggle('open');
+    nav.classList.toggle('menu-open');
+  });
+}
+
+// REVEAL on scroll
+var io=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target);}});
+},{threshold:.1,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal,.reveal.from-l,.reveal.from-r').forEach(function(el){io.observe(el);});
+
+// HERO STATS count-up
+function countUp(id,target,suffix){
+  var el=document.getElementById(id),v=0,step=target/80;
+  var t=setInterval(function(){v=Math.min(v+step,target);el.textContent=Math.round(v)+(suffix||'');if(v>=target)clearInterval(t);},20);
+}
+setTimeout(function(){
+  countUp('hs1',800,'+');
+  countUp('hs2',10,'+');
+  countUp('hs3',8,'');
+  countUp('hs4',5,'');
+},400);
+
+// HERO VIDEO — play ao hover + controle por scroll
+(function(){
+  var video = document.getElementById('heroVideo');
+  var hero  = document.getElementById('hero');
+  if(!video || !hero) return;
+
+  var playing = false;
+
+  function playVideo(){
+    if(playing) return;
+    playing = true;
+    video.currentTime = 0;
+    video.play().catch(function(){});
+  }
+  function stopVideo(){
+    if(!playing) return;
+    playing = false;
+    video.pause();
+    video.currentTime = 0;
+  }
+
+  // Desktop: hover ativa/desativa
+  hero.addEventListener('mouseenter', playVideo);
+  hero.addEventListener('mouseleave', stopVideo);
+
+  // Mobile + scroll: quando hero está visível >60%, play; sai do viewport, stop
+  var scrollObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.intersectionRatio >= 0.6){ playVideo(); }
+      else { stopVideo(); }
+    });
+  },{threshold:[0, 0.6]});
+  scrollObs.observe(hero);
+
+  // Quando o vídeo termina, reinicia suavemente (loop)
+  video.addEventListener('ended', function(){
+    video.currentTime = 0;
+    video.play().catch(function(){});
+  });
+})();
+
+// FAQ accordion
+document.querySelectorAll('.faq-q').forEach(function(q){
+  q.addEventListener('click',function(){
+    var item=this.parentElement,open=item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(function(i){i.classList.remove('open');});
+    if(!open)item.classList.add('open');
+  });
+});
+
+// Smooth anchor scroll
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var t=document.querySelector(this.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});}
+  });
+});
+</script>
+</body>
+</html>
